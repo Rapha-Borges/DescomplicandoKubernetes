@@ -12,7 +12,8 @@
     - [Criando o nosso primeiro Chart](#criando-o-nosso-primeiro-chart)
       - [Instalando o nosso Chart](#instalando-o-nosso-chart)
       - [Atualizando o nosso Chart](#atualizando-o-nosso-chart)
-      - [Utilizando `range`  e o `if` no Helm](#utilizando-range--e-o-if-no-helm)
+      - [Utilizando `range` e o `if` no Helm](#utilizando-range-e-o-if-no-helm)
+      - [Utilizando o `index` no Helm](#utilizando-o-index-no-helm)
       - [Utilizando `default`, `toYaml` e `toJson` no Helm](#utilizando-default-toyaml-e-tojson-no-helm)
       - [O Que São Helpers no Helm?](#o-que-são-helpers-no-helm)
         - [Por Que Usar Helpers?](#por-que-usar-helpers)
@@ -44,7 +45,7 @@
 
 Hoje é dia de falar sobre uma peça super importante quando estamos falando sobre como gerenciar aplicações no Kubernetes. O Helm é um gerenciador de pacotes para Kubernetes que facilita a definição, instalação e atualização de aplicações complexas no Kubernetes.
 
-Durante o dia de hoje, nós iremos descomplicar de uma vez por todas as suas dúvidas no momento de utilizar o Helm para gerencia de aplicações no Kubernetes.
+Durante o dia de hoje, nós iremos descomplicar de uma vez por todas as suas dúvidas no momento de utilizar o Helm para gerenciamento de aplicações no Kubernetes.
 
 Bora!
 
@@ -58,7 +59,7 @@ Lembrando que o Helm é um projeto da CNCF e é mantido pela comunidade, ele fun
 
 Para realizar a instalação no Linux, podemos utilizar diferentes formas, como baixar o binário e instalar manualmente, utilizar o gerenciador de pacotes da sua distribuição ou utilizar o script de instalação preparado pela comunidade.
 
-Vamos ver como realizar a instalação do Helm no Linux utilizando o script de instalação, mas fique a vontade de utilizar a forma que você achar mais confortável, e tire todas as suas dúvidas no site da documentação oficial do Helm.
+Vamos ver como realizar a instalação do Helm no Linux utilizando o script de instalação, mas fique a vontade para utilizar a forma que você achar mais confortável, e tire todas as suas dúvidas no site da documentação oficial do Helm.
 
 Para fazer a instalação, vamos fazer o seguinte:
 
@@ -107,7 +108,7 @@ Vamos parar de falar e vamos criar o nosso primeiro Chart, acho que ficará mais
 
 Para o nosso exemplo, vamos usar novamente a aplicação de exemplo chamada Giropops-Senhas, que é uma aplicação que gera senhas aleatórias que criamos durante uma live no canal da LINUXtips.
 
-Ela é uma aplicação simples, é uma aplicação em Python, mas especificamente uma aplicação Flask, que gera senhas aleatórias e exibe na tela. Ela utiliza um Redis para armazenar temporariamente as senhas geradas.
+Ela é uma aplicação simples desenvolvida em Python, mais precisamente utilizando o framework Flask, que gera senhas aleatórias e exibe na tela. Além disso, faz uso do Redis para armazenamento temporário das senhas geradas.
 
 Simples como voar!
 
@@ -238,7 +239,7 @@ spec:
   type: NodePort
 ```
 
-Manifesos criados! Perceba que não temos nada de novo até agora, somente criamos os manifestos do Kubernetes para a nossa aplicação como já fizemos anteriormente.
+Manifestos criados! Perceba que não temos nada de novo até agora, somente criamos os manifestos do Kubernetes para a nossa aplicação como já fizemos anteriormente.
 
 Mas o pq eu fiz isso? Simples, para que você possa entender que um Chart é basicamente isso, um conjunto de manifestos do Kubernetes que definem como a sua aplicação será instalada no Kubernetes.
 
@@ -247,7 +248,6 @@ E você deve estar falando: Esse Jeferson está de brincadeira, pois eu já sei 
 Bem, a ideia de criar os manifestos é somente para nos guiar durante a criação do nosso Chart.
 
 Com os arquivos para nos ajudar, vamos criar o nosso Chart.
-
 
 Para criar o nosso Chart, poderiamos utilizar o comando `helm create`, mas eu quero fazer de uma maneira diferente, quero criar o nosso Chart na mão, para que você possa entender como ele é composto, e depois voltamos para o `helm create` para criar os nossos próximos Charts.
 
@@ -263,9 +263,9 @@ Agora vamos acessar o diretório:
 cd giropops-senhas-chart
 ```
 
-Bem, agora vamos começar a criar a nossa estrutura de diretórios para o nosso Chart, e o primeiro cara que iremos criar é o Chart.yaml, que é o arquivo que contém as informações sobre o nosso Chart, como o nome, a versão, a descrição, etc.
+Bem, agora vamos começar a criar a nossa estrutura de diretórios para o nosso Chart, e o primeiro cara que iremos criar é o `Chart.yaml`, que é o arquivo que contém as informações sobre o nosso Chart, como o nome, a versão, a descrição, etc.
 
-Vamos criar o arquivo Chart.yaml com o seguinte conteúdo:
+Vamos criar o arquivo `Chart.yaml` com o seguinte conteúdo:
 
 ```yaml
 apiVersion: v2
@@ -296,12 +296,12 @@ mv ../giropops-senhas-service.yaml templates/
 
 Vamos deixar eles quietinhos lá por enquanto, e vamos criar o próximo arquivo que é o `values.yaml`. Esse é uma peça super importante do nosso Chart, pois é nele que iremos definir as variáveis que serão utilizadas nos nossos manifestos do Kubernetes, é nele que o Helm irá se basear para criar os manifestos do Kubernetes, ou melhor, para renderizar os manifestos do Kubernetes.
 
-Quando criamos os manifestos para a nossa App, nós deixamos ele da mesma forma como usamos para criar os manifestos do Kubernetes, mas agora, com o Helm, nós podemos utilizar variáveis para definir os valores que serão utilizados nos manifestos, e é isso que iremos fazer, e é isso que é uma das mágicas do Helm.
+Quando criamos os manifestos para a nossa App, nós deixamos ele da mesma forma como usamos para criar os manifestos do Kubernetes, mas agora, com o Helm, nós podemos utilizar variáveis para definir os valores que serão utilizados nos manifestos, e é isso que iremos fazer, essa é uma das mágicas do Helm.
 
 Vamos criar o arquivo `values.yaml` com o seguinte conteúdo:
 
 ```yaml
-giropops-senhas:
+giropopsSenhas:
   name: "giropops-senhas"
   image: "linuxtips/giropops-senhas:1.0"
   replicas: "3"
@@ -313,6 +313,7 @@ giropops-senhas:
   service:
     type: "NodePort"
     port: 5000
+    nodePort: 32500
     targetPort: 5000
     name: "giropops-senhas-port"
   resources:
@@ -324,6 +325,7 @@ giropops-senhas:
       cpu: "500m"
 
 redis:
+  name: "redis"
   image: "redis"
   replicas: 1
   port: 6379
@@ -347,9 +349,10 @@ redis:
 
 Não confunda o arquivo acima com os manifestos do Kubernetes, o arquivo acima é apenas algumas definições que iremos usar no lugar das variáveis que defineremos nos manifestos do Kubernetes.
 
-Precisamos entender como ler o arquivo acima, e é bem simples, o arquivo acima é um arquivo YAML, e nele temos duas chaves, `giropops-senhas` e `redis`, e dentro de cada chave temos as definições que iremos utilizar, por exemplo:
+Precisamos entender como ler o arquivo acima, e é bem simples, nada mais é do que um arquivo YAML, e nele temos duas chaves, `giropops-senhas` e `redis`, e dentro de cada chave temos as definições que iremos utilizar, por exemplo:
 
 - `giropops-senhas`:
+  - `name`: O nome que iremos utilizar para o nosso Deployment
   - `image`: A imagem que iremos utilizar para o nosso Deployment
   - `replicas`: A quantidade de réplicas que iremos utilizar para o nosso Deployment
   - `port`: A porta que iremos utilizar para o nosso Service
@@ -357,6 +360,7 @@ Precisamos entender como ler o arquivo acima, e é bem simples, o arquivo acima 
   - `service`: As definições que iremos utilizar para o nosso Service
   - `resources`: As definições de recursos que iremos utilizar para o nosso Deployment
 - `redis`:
+  - `name`: O nome que iremos utilizar para o nosso Deployment
   - `image`: A imagem que iremos utilizar para o nosso Deployment
   - `replicas`: A quantidade de réplicas que iremos utilizar para o nosso Deployment
   - `port`: A porta que iremos utilizar para o nosso Service
@@ -368,7 +372,7 @@ E nesse caso, caso eu queira usar o valor que está definido para `image`, eu po
 
 - {{ Values }}: É a variável que o Helm utiliza para acessar as variáveis que estão definidas no arquivo `values.yaml`, e o resto é a chave que estamos acessando.
 
-Entendeu? Eu sei que é meu confuso no começo, mas treinando irá ficar mais fácil.
+Entendeu? Eu sei que é meio confuso no começo, mas treinando irá ficar mais fácil.
 
 Vamos fazer um teste rápido, como eu vejo o valor da porta que está definida para o Service do Redis?
 
@@ -376,7 +380,7 @@ Pensou?
 
 Já sabemos que temos que começar com .Values, para representar o arquivo `values.yaml`, e depois temos que acessar a chave `redis`, e depois a chave `service`, e depois a chave `port`, então, o valor que está definido para a porta que iremos utilizar para o Service do Redis é `{{ .Values.redis.service.port }}`.
 
-Sempre você tem que respeitar a indentação do arquivo `values.yaml`, pois é ela que define como você irá acessar as chaves, certo?
+Você sempre tem que respeitar a indentação do arquivo `values.yaml`, pois é ela que define como você irá acessar as chaves, certo?
 
 Dito isso, já podemos começar a substituir os valores do que está definido nos manifestos do Kubernetes pelos valores que estão definidos no arquivo `values.yaml`. Iremos sair da forma estática para a forma dinâmica, é o Helm em ação!
 
@@ -388,7 +392,7 @@ kind: Deployment
 metadata:
   labels: 
     app: redis 
-  name: redis-deployment
+  name: {{ .Values.redis.name }}
 spec:
   replicas: {{ .Values.redis.replicas }}
   selector:
@@ -414,10 +418,16 @@ spec:
 ```
 
 Veja que estamos usando e abusando das variáveis que estão definidas no arquivo `values.yaml`, agora vou explicar o que estamos fazendo:
+
 ```yaml
-- `image`: Estamos utilizando a variável `{{ .Values.redis.image }}` para definir a imagem que iremos utilizar para o nosso Deployment
 - `name`: Estamos utilizando a variável `{{ .Values.redis.name }}` para definir o nome que iremos utilizar para o nosso Deployment
+
 - `replicas`: Estamos utilizando a variável `{{ .Values.redis.replicas }}` para definir a quantidade de réplicas que iremos utilizar para o nosso Deployment
+
+- `image`: Estamos utilizando a variável `{{ .Values.redis.image }}` para definir a imagem que iremos utilizar para o nosso Deployment
+
+- `containerPort`: Estamos utilizando a variável `{{ .Values.redis.port }}` para definir a porta que iremos utilizar para o nosso Deployment
+
 - `resources`: Estamos utilizando as variáveis `{{ .Values.redis.resources.limits.memory }}`, `{{ .Values.redis.resources.limits.cpu }}`, `{{ .Values.redis.resources.requests.memory }}` e `{{ .Values.redis.resources.requests.cpu }}` para definir as definições de recursos que iremos utilizar para o nosso Deployment.
 ```
 
@@ -438,7 +448,7 @@ spec:
   ports:
     - protocol: TCP
       port: {{ .Values.redis.service.port }}
-      targetPort: {{ .Values.redis.service.port }}
+      targetPort: {{ .Values.redis.service.targetPort }}
   type: {{ .Values.redis.service.type }}
 ```
 
@@ -450,9 +460,9 @@ kind: Deployment
 metadata:
   labels:
     app: giropops-senhas
-  name: giropops-senhas
+  name: {{ .Values.giropopsSenhas.name }}
 spec:
-  replicas: {{ .Values.giropops-senhas.replicas }}
+  replicas: {{ .Values.giropopsSenhas.replicas }}
   selector:
     matchLabels:
       app: giropops-senhas
@@ -462,18 +472,18 @@ spec:
         app: giropops-senhas
     spec:
       containers:
-      - image: {{ .Values.giropops-senhas.image }}
+      - image: {{ .Values.giropopsSenhas.image }}
         name: giropops-senhas
         ports:
-        - containerPort: {{ .Values.giropops-senhas.service.port }}
+        - containerPort: {{ .Values.giropopsSenhas.service.port }}
         imagePullPolicy: Always
         resources:
           limits:
-            memory: {{ .Values.giropops-senhas.resources.limits.memory }}
-            cpu: {{ .Values.giropops-senhas.resources.limits.cpu }}
+            memory: {{ .Values.giropopsSenhas.resources.limits.memory }}
+            cpu: {{ .Values.giropopsSenhas.resources.limits.cpu }}
           requests:
-            memory: {{ .Values.giropops-senhas.resources.requests.memory }}
-            cpu: {{ .Values.giropops-senhas.resources.requests.cpu }}
+            memory: {{ .Values.giropopsSenhas.resources.requests.memory }}
+            cpu: {{ .Values.giropopsSenhas.resources.requests.cpu }}
 ```
 
 E para o arquivo `giropops-senhas-service.yaml`:
@@ -490,10 +500,10 @@ spec:
     app: giropops-senhas
   ports:
     - protocol: TCP
-      port: {{ .Values.giropops-senhas.service.port }}
-      nodePort: {{ .Values.giropops-senhas.service.nodePort }}
-      targetPort: {{ .Values.giropops-senhas.service.port }}
-  type: {{ .Values.giropops-senhas.service.type }}
+      port: {{ .Values.giropopsSenhas.service.port }}
+      nodePort: {{ .Values.giropopsSenhas.service.nodePort }}
+      targetPort: {{ .Values.giropopsSenhas.service.targetPort }}
+  type: {{ .Values.giropopsSenhas.service.type }}
 ```
 
 Agora já temos todos os nosso manifestos mais dinâmicos, e portanto já podemos chama-los de Templates, que é o nome que o Helm utiliza para os manifestos do Kubernetes que são renderizados utilizando as variáveis.
@@ -574,7 +584,7 @@ Vamos fazer uma alteração no nosso Chart, e vamos ver como atualizar a nossa a
 Vamos editar o `values.yaml` e alterar a quantidade de réplicas que estamos utilizando para a nossa aplicação Giropops-Senhas, para isso, edite o arquivo `values.yaml` e altere a quantidade de réplicas para 5:
 
 ```yaml
-giropops-senhas:
+giropopsSenhas:
   name: "giropops-senhas"
   image: "linuxtips/giropops-senhas:1.0"
   replicas: "5"
@@ -586,6 +596,7 @@ giropops-senhas:
   service:
     type: "NodePort"
     port: 5000
+    nodePort: 32500
     targetPort: 5000
     name: "giropops-senhas-port"
   resources:
@@ -692,7 +703,7 @@ Agora eu preciso que você pratique o máximo possível, brincando com as divers
 
 Bora deixar o nosso Chart ainda mais legal?
 
-#### Utilizando `range`  e o `if` no Helm
+#### Utilizando `range` e o `if` no Helm
 
 O Helm tem uma funcionalidade muito legal que é o `range`, que é uma estrutura de controle que nos permite iterar sobre uma lista de itens, e isso é muito útil quando estamos trabalhando com listas de itens, como por exemplo, quando estamos trabalhando com os manifestos do Kubernetes.
 
@@ -708,7 +719,7 @@ frutas:
   - morango
 ```
 
-Agora vamos pegar fruta por fruta, e colocando a seguinte frase antes de cada uma delas: "Eu gosto de". 
+Agora vamos pegar fruta por fruta, e colocar a seguinte frase antes de cada uma delas: "Eu gosto de". 
 
 Para isso, vamos criar um arquivo chamado `eu-gosto-frutas.yaml` com o seguinte conteúdo:
 
@@ -736,7 +747,7 @@ Por exemplo, a nossa aplicação Giropops-Senhas, ela tem 2 portas que ela expõ
 
 Outra função super interessante e que é muito útil é o `if`, que é uma estrutura de controle que nos permite fazer uma verificação se uma condição é verdadeira ou falsa, e baseado nisso, podemos fazer alguma coisa ou não.
 
-a Estrutura básica do `if` é a seguinte:
+A Estrutura básica do `if` é a seguinte:
 
 ```yaml
 {{- if eq .Values.giropopsSenhas.service.type "NodePort" }}
@@ -757,12 +768,12 @@ Onde:
 - `{{- end }}`: Finaliza a estrutura de controle
 ```
 
-Simples como voar! Bora lá utilizar essas duas fun´ções para deixar o nosso Chart ainda mais legal.
+Simples como voar! Bora lá utilizar essas duas funções para deixar o nosso Chart ainda mais legal.
 
 Vamos começar criando um arquivo chamado `giropops-senhas-service.yaml` com o seguinte conteúdo:
 
 ```yaml
-{{- range .Values.giropops-senhas.ports }}
+{{- range .Values.giropopSenhas.ports }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -775,7 +786,7 @@ spec:
   - name: {{ .name }}
     port: {{ .port }}
 {{- if eq .serviceType "NodePort" }}
-    nodePort: {{ .NodePort }}
+    nodePort: {{ .nodePort }}
 {{- end }}
     targetPort: {{ .targetPort }}
   selector:
@@ -789,8 +800,8 @@ No arquivo acima, estamos utilizando a função `range` para iterar sobre a list
 Agora vamos alterar o arquivo `values.yaml` e adicionar a lista de portas que queremos expor para a nossa aplicação, para isso, edite o arquivo `values.yaml` e adicione a lista de portas que queremos expor para a nossa aplicação:
 
 ```yaml
-giropops-senhas:
-  name: "giropops-senhas"
+giropopsSenhas:
+  name: "giropops-senhas-helm"
   image: "linuxtips/giropops-senhas:1.0"
   replicas: "3"
   ports:
@@ -798,7 +809,7 @@ giropops-senhas:
       targetPort: 5000
       name: "giropops-senhas-port"
       serviceType: NodePort
-      NodePort: 32500
+      nodePort: 32500
     - port: 8088
       targetPort: 8088
       name: "giropops-senhas-metrics"
@@ -807,6 +818,11 @@ giropops-senhas:
     app: "giropops-senhas"
     env: "labs"
     live: "true"
+  service:
+    name: "giropops-senhas-svc"
+    type: "ClusterIP"
+    port: 5000
+    targetPort: 5000
   resources:
     requests:
       memory: "128Mi"
@@ -815,6 +831,7 @@ giropops-senhas:
       memory: "256Mi"
       cpu: "500m"
 redis:
+  name: "redis-helm"
   image: "redis"
   replicas: 1
   port: 6379
@@ -836,101 +853,9 @@ redis:
       cpu: "500m"
 ```
 
-Temos algumas coisas novas no arquivo `values.yaml`. O objetivo da mudança é deixar o arquivo ainda mais dinâmico, e para isso, adicionamos adicionamos mais informações sobre as portas que iremos utilizar. Deixamos as informações mais organizadas para facilitar a dinâmica criada no arquivo `giropops-senhas-service.yaml`.
-
-Poderiamos ainda criar um único template para realizar o deploy do Redis e do Giropops-Senhas, somente para que possamos gastar um pouquinho mais do nosso conhecimento, ou seja, isso aqui é muito mais para fins didáticos do que para a vida real, mas vamos lá, vamos criar um arquivo chamado `giropops-senhas-deployment.yaml` com o seguinte conteúdo:
-
-```yaml
-{{- range $component, $config := .Values.deployments }}
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ $component }}
-  labels:
-    app: {{ $config.labels.app }}
-spec:
-  replicas: {{ $config.replicas }}
-  selector:
-    matchLabels:
-      app: {{ $config.labels.app }}
-  template:
-    metadata:
-      labels:
-        app: {{ $config.labels.app }}
-    spec:
-      containers:
-      - name: {{ $component }}
-        image: {{ $config.image }}
-        ports:
-        {{- range $config.ports }}
-        - containerPort: {{ .port }}
-        {{- end }}
-        resources:
-          requests:
-            memory: {{ $config.resources.requests.memory }}
-            cpu: {{ $config.resources.requests.cpu }}
-          limits:
-            memory: {{ $config.resources.limits.memory }}
-            cpu: {{ $config.resources.limits.cpu }}
-{{- if $config.env }}
-        env:
-        {{- range $config.env }}
-        - name: {{ .name }}
-          value: {{ .value }}
-        {{- end }}
-{{- end }}
----
-{{- end }}
-```
-
-Estamos utilizando a função `range` logo no inicio do arquivo, e com ele estamos interando sobre a lista de componentes que temos no nosso arquivo `values.yaml`, ou seja, o Redis e o Giropops-Senhas. Mas também estamos utilizando o `range` para interar sobre a lista de outras configurações que temos no nosso arquivo `values.yaml`, como por exemplo, as portas que queremos expor para a nossa aplicação e o limite de recursos que queremos utilizar. Ele definiu duas variáveis, `$component` e `$config`, onde `$component` é o nome do componente que estamos interando, e `$config` é a configuração que estamos interando, fácil!
+Temos algumas coisas novas no arquivo `values.yaml`. O objetivo da mudança é deixar o arquivo ainda mais dinâmico, e para isso, adicionamos mais informações sobre as portas que iremos utilizar. Deixamos as informações mais organizadas para facilitar a dinâmica criada no arquivo `giropops-senhas-service.yaml`.
 
 Agora vamos instalar a nossa aplicação com o comando abaixo:
-
-```bash
-helm install giropops-senhas ./
-```
-
-A saída será algo assim:
-
-```bash
-Error: INSTALLATION FAILED: parse error at (giropops-senhas/templates/services.yaml:1): bad character U+002D '-'
-```
-
-Parece que alguma coisa de errado não está certo, certo? hahaha
-
-O que aconteceu foi o seguinte:
-
-Quando estamos utilizando o nome do componente com um hífen, e tentamos passar na utilização do `range`, o Helm não entende que aquele é o nome do recurso que estamos utilizando, e retorna o erro de `bad character U+002D '-'`.
-
-Para resolver isso, vamos utilizar mais uma função do Helm, que é a função `index`.
-
-A função `index` nos permite acessar um valor de um mapa baseado na chave que estamos passando, nesse caso seria o `.Values`, e ainda buscar um valor baseado na chave que estamos passando, que é o nome do componente que estamos interando. Vamos ver como ficaria o nosso `services.yaml` com a utilização da função `index`:
-
-```yaml
-{{- range (index .Values "giropops-senhas").ports }}
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ .name }}
-  labels:
-    app: {{ .name }}
-spec:
-  type: {{ .serviceType }}
-  ports:
-  - name: {{ .name }}
-    port: {{ .port }}
-{{- if eq .serviceType "NodePort" }}
-    nodePort: {{ .NodePort }}
-{{- end }}
-    targetPort: {{ .targetPort }}
-  selector:
-    app: giropops-senhas
----
-{{- end }}
-```
-
-Pronto, agora acredito que tudo terá um final feliz, para ter certeza, vamos instalar a nossa aplicação com o comando abaixo:
 
 ```bash
 helm install giropops-senhas ./
@@ -996,7 +921,7 @@ Parece que deu ruim, certo?
 
 Ficou faltando o Service do Redis. :/
 
-Vamos resolver, mas antes, vamos mudar um pouco a organização em nosso `values.yaml`.
+Vamos resolver, mas antes, vamos mudar um pouco a organização em nosso `values.yaml`. Podemos criar um único template para realizar o deploy do Redis e do Giropops-Senhas, somente para que possamos gastar um pouquinho mais do nosso conhecimento, ou seja, isso aqui é muito mais para fins didáticos do que para a vida real.
 
 ```yaml
 deployments:
@@ -1040,12 +965,12 @@ services:
     ports:
       - port: 5000
         targetPort: 5000
-        name: "giropops-senhas-app"
+        name: "app"
         serviceType: NodePort
-        NodePort: 32500
+        nodePort: 32500
       - port: 8088
         targetPort: 8088
-        name: "giropops-senhas-metrics"
+        name: "metrics"
         serviceType: ClusterIP
     labels:
       app: "giropops-senhas"
@@ -1054,8 +979,8 @@ services:
   redis:
     ports:
       - port: 6379
-        targetPort: 6378
-        name: "redis-port"
+        targetPort: 6379
+        name: "service"
         serviceType: ClusterIP
     labels:
       app: "redis"
@@ -1063,9 +988,54 @@ services:
       live: "true"
 ```
 
-Precisamos agora atualizar os nossos templates para que eles possam utilizar as novas chaves que criamos no arquivo `values.yaml`.
+Precisamos atualizar os nossos templates para que eles possam utilizar as novas chaves que criamos no arquivo `values.yaml`.
 
-Vamos atualizar o `services.yaml` para que ele possa utilizar as novas chaves que criamos no arquivo `values.yaml`:
+Vamos começar com o arquivo `giropops-senhas-deployment.yaml`:
+
+```yaml
+{{- range $component, $config := .Values.deployments }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $component }}
+  labels:
+    app: {{ $config.labels.app }}
+spec:
+  replicas: {{ $config.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $config.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ $config.labels.app }}
+    spec:
+      containers:
+      - name: {{ $component }}
+        image: {{ $config.image }}
+        ports:
+        {{- range $config.ports }}
+        - containerPort: {{ .port }}
+        {{- end }}
+        resources:
+          requests:
+            memory: {{ $config.resources.requests.memory }}
+            cpu: {{ $config.resources.requests.cpu }}
+          limits:
+            memory: {{ $config.resources.limits.memory }}
+            cpu: {{ $config.resources.limits.cpu }}
+{{- if $config.env }}
+        env:
+        {{- range $config.env }}
+        - name: {{ .name }}
+          value: {{ .value }}
+        {{- end }}
+{{- end }}
+---
+{{- end }}
+```
+
+Agora vamos atualizar o `services.yaml` para que ele possa utilizar as novas chaves que criamos no arquivo `values.yaml`:
 
 ```yaml
 {{- range $component, $config := .Values.services }}
@@ -1084,7 +1054,7 @@ spec:
     protocol: TCP
     name: {{ $port.name }}
     {{ if eq $port.serviceType "NodePort" }}
-    nodePort: {{ $port.NodePort }}
+    nodePort: {{ $port.nodePort }}
     {{ end }}
   selector:
     app: {{ $config.labels.app }}
@@ -1093,11 +1063,11 @@ spec:
 {{- end }}
 ```
 
-Adicionamos um novo `range` para interar sobre a lista de portas que queremos expor para a nossa aplicação, e utilizamos a função `index` para acessar o valor que está definido para a chave `services` no arquivo `values.yaml`.
+Estamos utilizando a função `range` logo no inicio do arquivo, e com ele estamos interando sobre a lista de componentes que temos no nosso arquivo `values.yaml`, ou seja, o Redis e o Giropops-Senhas. Mas também estamos utilizando o `range` para interar sobre a lista de outras configurações que temos no nosso arquivo `values.yaml`, como por exemplo, as portas que queremos expor para a nossa aplicação.
 
-Como o nosso `deployments.yaml` já está atualizado, não precisamos fazer nenhuma alteração nele, o que precisamos é deployar o nosso Chart novamente e ver se as nossas mondificações funcionaram.
+Ele definiu duas variáveis, `$component` e `$config`, onde `$component` é o nome do componente que estamos interando, e `$config` é a configuração que estamos interando, fácil!
 
-Temos duas opções, ou realizamos o `uninstall` e o `install` novamente, ou realizamos o `upgrade` da nossa aplicação.
+Temos duas opções deployar o nosso Chart novamente, ou realizamos o `uninstall` e o `install` novamente, ou realizamos o `upgrade` da nossa aplicação.
 
 Vou realizar o `uninstall` e o `install` novamente, para isso, execute os comandos abaixo:
 
@@ -1111,7 +1081,7 @@ E agora:
 helm install giropops-senhas ./
 ```
 
-Caso eu queira fazer o `upgrade`, eu poderia utilizar o comando abaixo:
+Caso queira fazer o `upgrade`, poderia utilizar o comando abaixo:
 
 ```bash
 helm upgrade giropops-senhas ./
@@ -1156,12 +1126,51 @@ service/redis-service             ClusterIP   10.96.77.187   <none>        6379/
 
 Pronto! Tudo criado com sucesso!
 
-Agora você já sabe como utilizar o `range`, `index` e o `if` no Helm, e já sabe como criar um Chart do zero, e já sabe como instalar, atualizar e remover a sua aplicação utilizando o Helm.
+#### Utilizando o `index` no Helm
+
+O `index` é uma função que nos permite acessar um item específico de uma lista, e isso é muito útil quando estamos trabalhando com listas de itens, como por exemplo, os manifestos do Kubernetes.
+
+Lembra quando tentamos criar o nosso Service para o `Giropops-Senhas` e recebemos o erro abaixo?
+
+```bash
+Error: INSTALLATION FAILED: parse error at (giropops-senhas/templates/services.yaml:1): bad character U+002D '-'
+```
+
+Isso aconteceu porque o Helm não consegue interpretar o hífen (`-`) no nome do Service, e para resolver, podemos utilizar o `index`. A função `index` nos permite acessar um valor de um mapa baseado na chave que estamos passando (`.Values`), que nesse caso, é o nome do componente que estamos interando.
+
+Vamos ver como ficaria o nosso `services.yaml` com a utilização da função `index`:
+
+```yaml
+{{- range (index .Values "giropops-senhas").ports }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  labels:
+    app: {{ .name }}
+spec:
+  type: {{ .serviceType }}
+  ports:
+  - name: {{ .name }}
+    port: {{ .port }}
+{{- if eq .serviceType "NodePort" }}
+    nodePort: {{ .nodePort }}
+{{- end }}
+    targetPort: {{ .targetPort }}
+  selector:
+    app: giropops-senhas
+---
+{{- end }}
+```
+
+Agora o Helm consegue interpretar o hífen (`-`) no nome do Service, e o nosso arquivo `services.yaml` está funcionando corretamente.
+
+Agora você já sabe como utilizar o `range`, `index` e o `if` no Helm, como criar um Chart do zero, e como instalar, atualizar e remover a sua aplicação utilizando o Helm.
 
 
 #### Utilizando `default`, `toYaml` e `toJson` no Helm
 
-Vamos comecer mais algumas funções do Helm, que são o `default`, `toYaml` e `toJson`, que nos ajudarão a deixar o nosso Chart ainda mais dinâmico e customizável.
+Vamos conhecer mais algumas funções do Helm, que são o `default`, `toYaml` e `toJson`, que nos ajudarão a deixar o nosso Chart ainda mais dinâmico e customizável.
 
 Suponhamos que queremos garantir que sempre haja um valor padrão para o número de réplicas nos nossos deployments, mesmo que esse valor não tenha sido especificamente definido no `values.yaml`. Podemos modificar o nosso `giropops-senhas-deployment.yaml` para incluir a função `default`:
 
